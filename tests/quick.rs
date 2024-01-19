@@ -14,6 +14,7 @@ use quickcheck as qc;
 use std::cmp::{max, min, Ordering};
 use std::collections::{HashMap, HashSet};
 use std::default::Default;
+use std::iter::FromIterator;
 use std::num::Wrapping;
 use std::ops::Range;
 
@@ -1300,6 +1301,40 @@ quickcheck! {
             assert!(vals.iter().all(|&val| val % modulo == key));
         }
     }
+}
+
+
+
+quickcheck! {
+    fn correct_arrangement(a: Iter<u8>, k: usize) -> () {
+
+        // The partial permutation of a is the only iterator that satisfy:
+        //  - length of `binomial(n, k)`
+        //  - all elements are unique and included in a
+        //  - there are no repetition within elements of the iterator and they are all length k
+   
+
+        // entry is cut to length 15 to avoid too expensive computation
+        let tmp: Vec<u8> = a.take(15).collect();
+        let n = tmp.len();
+        let values: HashSet<u8> = HashSet::from_iter(tmp.iter().cloned());
+
+        let output_set: HashSet<Vec<u8>> = HashSet::from_iter(tmp.into_iter().arrangement(k));
+
+        if n != 0 && k != 0 {
+            assert_eq!(binomial(n, k), output_set.len());
+        } else {
+            assert_eq!(0, output_set.len());
+        }
+
+        for arrangment in output_set {
+            let item = HashSet::from_iter(arrangment.iter().cloned());
+            assert_eq!(item.len(), k);
+            assert_eq!(arrangment.len(), k);
+            assert!(item.is_subset(&values));
+        };
+    }
+
 }
 
 /// A peculiar type: Equality compares both tuple items, but ordering only the

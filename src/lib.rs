@@ -115,6 +115,7 @@ pub mod structs {
     pub use crate::peeking_take_while::PeekingTakeWhile;
     #[cfg(feature = "use_alloc")]
     pub use crate::permutations::Permutations;
+    pub use crate::arrangement::Arrrangement;
     #[cfg(feature = "use_alloc")]
     pub use crate::powerset::Powerset;
     pub use crate::process_results_impl::ProcessResults;
@@ -203,6 +204,7 @@ mod peek_nth;
 mod peeking_take_while;
 #[cfg(feature = "use_alloc")]
 mod permutations;
+mod arrangement;
 #[cfg(feature = "use_alloc")]
 mod powerset;
 mod process_results_impl;
@@ -728,6 +730,7 @@ pub trait Itertools: Iterator {
     {
         tuple_impl::circular_tuple_windows(self)
     }
+
     /// Return an iterator that groups the items in tuples of a specific size
     /// (up to 12).
     ///
@@ -1723,6 +1726,40 @@ pub trait Itertools: Iterator {
         Self::Item: Clone,
     {
         permutations::permutations(self, k)
+    }
+
+
+    /// Return an iterator adaptor that iterates over all k-partial-permutations of the
+    /// elements from an iterator.
+    ///
+    /// Iterator element type is `Vec<Self::Item>` with length `k`. The iterator
+    /// produces a new Vec per iteration, and clones the iterator elements.
+    ///
+    /// If `k` is greater than the length of the input iterator, the resultant
+    /// iterator adaptor will be empty.
+    ///
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let perms = (5..8).arrangement(2);
+    /// itertools::assert_equal(perms, vec![
+    ///     vec![5, 6],
+    ///     vec![5, 7],
+    ///     vec![6, 7],
+    /// ]);
+    /// ```
+    ///
+    ///
+    /// Note: The source iterator is collected lazily, and will not be
+    /// re-iterated if the permutations adaptor is completed and re-iterated.
+    #[cfg(feature = "use_alloc")]
+    fn arrangement(self, k: usize) -> Arrrangement<Self>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+    {
+        arrangement::arrangement(self, k)
     }
 
     /// Return an iterator that iterates through the powerset of the elements from an
